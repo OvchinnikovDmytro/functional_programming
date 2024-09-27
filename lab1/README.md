@@ -75,9 +75,9 @@
 
 ```lisp
 ; variant 1
-(defvar temp-list)
-(setq temp-list (list nil 'B 1))
-(print (list 'A (cdr temp-list) 'C (cdr temp-list) ))
+(defvar x)
+(setq x 1)
+(print (list 'A (list 'B x) 'C (list 'B x) ))
 ```
 ## Результат виконання програми
 ```
