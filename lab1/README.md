@@ -75,9 +75,9 @@
 
 ```lisp
 ; variant 1
-(defvar x)
-(setq x (list 1))
-(print (list 'A (list 'B (car x)) 'C (list 'B (car x)) ))
+(let ((x 1))
+(print (list 'A (list 'B x) 'C (list 'B x) ))
+)
 ```
 ## Результат виконання програми
 ```
