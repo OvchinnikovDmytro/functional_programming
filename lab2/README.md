@@ -42,11 +42,10 @@ CL-USER> (list-set-intersection '(1 2 3 4) '(3 4 5 6))
 ## Лістинг функції remove-seconds-and-thirds
 ```lisp
 (defun remove-seconds-and-thirds (lst &optional (index 1))
-  (if (null lst)
-      nil
-      (if (or (= index 2) (= index 3))
-          (remove-seconds-and-thirds (cdr lst) (if (= index 3) 1 (1+ index)))
-          (cons (car lst) (remove-seconds-and-thirds (cdr lst) (1+ index))))))
+  (when lst
+    (if (or (= index 2) (= index 3))
+        (remove-seconds-and-thirds (cdr lst) (if (= index 3) 1 (1+ index)))
+        (cons (car lst) (remove-seconds-and-thirds (cdr lst) (1+ index))))))
 ```
 ### Тестові набори
 ```lisp
@@ -63,7 +62,6 @@ CL-USER> (list-set-intersection '(1 2 3 4) '(3 4 5 6))
   (check-remove-seconds-and-thirds "test 4" '(a) '(a))
   (check-remove-seconds-and-thirds "test 5" '(a b) '(a))
   (check-remove-seconds-and-thirds "test 6" '(1 a g d 5) '(1 d))
-  (check-remove-seconds-and-thirds "test 7 failed" '(1 2 3 4 5 6 7) '(1 4))
 )
 ```
 ### Тестування
@@ -74,21 +72,18 @@ passed... test 3
 passed... test 4
 passed... test 5
 passed... test 6
-FAILED... test 7 failed
 ```
 ## Лістинг функції list-set-intersection
 ```lisp
 (defun list-set-intersection (a b)
-  (if (null a)
-      nil
-      (let ((x (car a)))
-        (if (find-in-list x b)
-            (cons x (list-set-intersection (cdr a) b))
-            (list-set-intersection (cdr a) b)))))
+  (when a
+    (let ((x (car a)))
+      (if (find-in-list x b)
+          (cons x (list-set-intersection (cdr a) b))
+          (list-set-intersection (cdr a) b)))))
 
 (defun find-in-list (x lst)
-  (if (null lst)
-      nil
+  (when lst
       (if (eql x (car lst))
           t
           (find-in-list x (cdr lst)))))
@@ -110,7 +105,6 @@ FAILED... test 7 failed
   (check-list-set-intersection "Test 6" '(1 2 3 4) '(5 6 7 8) '())
   (check-list-set-intersection "Test 7" '(1 2 3) '(3 1 2) '(1 2 3))
   (check-list-set-intersection "Test 8" '(1 2 3 3) '(3 3 4 5) '(3 3))
-  (check-list-set-intersection "Test 9 failed" '(1 2 3 a) '(3 a 4 5) '(3))
 )
 ```
 ### Тестування
@@ -123,7 +117,6 @@ passed... Test 5
 passed... Test 6
 passed... Test 7
 passed... Test 8
-FAILED... Test 9 failed
 ```
 
 
