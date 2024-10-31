@@ -73,7 +73,8 @@
   (check-selection-sort-functional "test 2" '(9 7 5 3 1) '(1 3 5 7 9))
   (check-selection-sort-functional "test 3" '(1 2 3 4 5) '(1 2 3 4 5))
   (check-selection-sort-functional "test 4" '(10) '(10))
-  (check-selection-sort-functional "test 5" '(nil) '(nil)))
+  (check-selection-sort-functional "test 5" '(nil) '(nil))
+  (check-selection-sort-functional "test 6" '(1 1 1 1 1) '(1 1 1 1 1)))
 ```
 ### Тестування
 ```lisp
@@ -106,12 +107,13 @@ PASSED... test 6
   "Перевіряє функцію selection-sort-imperative з вхідними даними input і очікуваним результатом expected."
   (format t "~:[FAILED~;PASSED~]... ~a~%" (equal (selection-sort-imperative input) expected) name))
 
-(defun test-selection-sort-imperative ()
-  (check-selection-sort-imperative "test 1" '(5 3 8 1 4) '(1 3 4 5 8))
-  (check-selection-sort-imperative "test 2" '(9 7 5 3 1) '(1 3 5 7 9))
-  (check-selection-sort-imperative "test 3" '(1 2 3 4 5) '(1 2 3 4 5))
-  (check-selection-sort-imperative "test 4" '(10) '(10))
-  (check-selection-sort-imperative "test 5" '(nil) '(nil)))
+(defun test-selection-sort-functional ()
+  (check-selection-sort-functional "test 1" '(5 3 8 1 4) '(1 3 4 5 8))
+  (check-selection-sort-functional "test 2" '(9 7 5 3 1) '(1 3 5 7 9))
+  (check-selection-sort-functional "test 3" '(1 2 3 4 5) '(1 2 3 4 5))
+  (check-selection-sort-functional "test 4" '(10) '(10))
+  (check-selection-sort-functional "test 5" '(nil) '(nil))
+  (check-selection-sort-functional "test 6" '(1 1 1 1 1) '(1 1 1 1 1)))
 ```
 ### Тестування
 ```lisp
