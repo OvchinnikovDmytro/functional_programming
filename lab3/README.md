@@ -39,96 +39,88 @@
 мають бути оформленні у вигляді модульних тестів (наприклад, як наведено у п. 2.3).
 
 ## Варіант 1(17)
-1. Написати функцію remove-seconds-and-thirds , яка видаляє зі списку кожен другий
-і третій елементи:
+Алгоритм сортування вибором за незменшенням
+
+## Лістинг функції selection-sort-functional
 ```lisp
-CL-USER> (remove-seconds-and-thirds '(a b c d e f g))
-(A D G)
-```
-2. Написати функцію list-set-intersection , яка визначає перетин двох множин,
-заданих списками атомів:
-```lisp
-CL-USER> (list-set-intersection '(1 2 3 4) '(3 4 5 6))
-(3 4) ; порядок може відрізнятись
-```
-## Лістинг функції remove-seconds-and-thirds
-```lisp
-(defun remove-seconds-and-thirds (lst &optional (index 1))
-  (when lst
-    (if (or (= index 2) (= index 3))
-        (remove-seconds-and-thirds (cdr lst) (if (= index 3) 1 (1+ index)))
-        (cons (car lst) (remove-seconds-and-thirds (cdr lst) (1+ index))))))
+(defun find-min (lst current-min)
+  (if (null lst) 
+    current-min
+    (find-min (cdr lst) 
+      (if (< (car lst) current-min) 
+        (car lst)
+        current-min))))
+
+(defun remove-element (lst element)
+  (cond ((null lst) nil)
+    ((equal (car lst) element) (cdr lst))
+    (t (cons (car lst) (remove-element (cdr lst) element)))))
+
+(defun selection-sort-functional (lst)
+  (if (null lst)
+    nil
+    (let ((min (find-min (cdr lst) (car lst))))
+      (cons min (selection-sort-functional (remove-element lst min))))))
 ```
 ### Тестові набори
 ```lisp
-(defun check-remove-seconds-and-thirds (name input expected)
-  "Execute `remove-seconds-and-thirds' on `input', compare result with `expected' and print comparison status"
-  (format t "~:[FAILED~;passed~]... ~a~%"
-          (equal (remove-seconds-and-thirds input) expected)
-          name))
+(defun check-selection-sort-functional (name input expected)
+  "Перевіряє функцію selection-sort-functional з вхідними даними input і очікуваним результатом expected."
+  (format t "~:[FAILED~;PASSED~]... ~a~%" (equal (selection-sort-functional input) expected) name))
 
-(defun test-remove-seconds-and-thirds ()
-  (check-remove-seconds-and-thirds "test 1" '(a b c d e f g) '(a d g))
-  (check-remove-seconds-and-thirds "test 2" '(1 2 3 4 5 6) '(1 4))
-  (check-remove-seconds-and-thirds "test 3" '() '())
-  (check-remove-seconds-and-thirds "test 4" '(a) '(a))
-  (check-remove-seconds-and-thirds "test 5" '(a b) '(a))
-  (check-remove-seconds-and-thirds "test 6" '(1 a g d 5) '(1 d))
-)
+(defun test-selection-sort-functional ()
+  (check-selection-sort-functional "test 1" '(5 3 8 1 4) '(1 3 4 5 8))
+  (check-selection-sort-functional "test 2" '(9 7 5 3 1) '(1 3 5 7 9))
+  (check-selection-sort-functional "test 3" '(1 2 3 4 5) '(1 2 3 4 5))
+  (check-selection-sort-functional "test 4" '(10) '(10))
+  (check-selection-sort-functional "test 5" '(nil) '(nil)))
 ```
 ### Тестування
 ```lisp
-passed... test 1
-passed... test 2
-passed... test 3
-passed... test 4
-passed... test 5
-passed... test 6
+PASSED... test 1
+PASSED... test 2
+PASSED... test 3
+PASSED... test 4
+PASSED... test 5
+PASSED... test 6
 ```
-## Лістинг функції list-set-intersection
+## Лістинг функції selection-sort-imperative
 ```lisp
-(defun list-set-intersection (a b)
-  (when a
-    (let ((x (car a)))
-      (if (find-in-list x b)
-          (cons x (list-set-intersection (cdr a) b))
-          (list-set-intersection (cdr a) b)))))
-
-(defun find-in-list (x lst)
-  (when lst
-      (if (eql x (car lst))
-          t
-          (find-in-list x (cdr lst)))))
+(defun selection-sort-imperative (lst)
+  (let ((sorted-list (copy-list lst))
+    (n (length lst)))
+    (loop for i from 0 below (1- n) do
+      (let ((min-index i))
+        (loop for j from (1+ i) below n do
+          (when (< (nth j sorted-list) (nth min-index sorted-list))
+            (setf min-index j)))
+        (when (not (= min-index i))
+          (let ((temp (nth i sorted-list)))
+            (setf (nth i sorted-list) (nth min-index sorted-list))
+            (setf (nth min-index sorted-list) temp)))))
+  sorted-list))
 ```
 ### Тестові набори
 ```lisp
-(defun check-list-set-intersection (name set1 set2 expected)
-  "Execute `list-set-intersection` on `set1` and `set2`, compare result with `expected` and print comparison status."
-  (format t "~:[FAILED~;passed~]... ~a~%"
-          (equal (list-set-intersection set1 set2) expected)
-          name))
+(defun check-selection-sort-imperative (name input expected)
+  "Перевіряє функцію selection-sort-imperative з вхідними даними input і очікуваним результатом expected."
+  (format t "~:[FAILED~;PASSED~]... ~a~%" (equal (selection-sort-imperative input) expected) name))
 
-(defun test-list-set-intersection ()
-  (check-list-set-intersection "Test 1" '(1 2 3 4) '(3 4 5 6) '(3 4))
-  (check-list-set-intersection "Test 2" '(a b c) '(b c d) '(b c))
-  (check-list-set-intersection "Test 3" '() '(1 2 3) '())
-  (check-list-set-intersection "Test 4" '(1 2 3) '() '())
-  (check-list-set-intersection "Test 5" '(a b 1 d e) '(1 e f g) '(1 e))
-  (check-list-set-intersection "Test 6" '(1 2 3 4) '(5 6 7 8) '())
-  (check-list-set-intersection "Test 7" '(1 2 3) '(3 1 2) '(1 2 3))
-  (check-list-set-intersection "Test 8" '(1 2 3 3) '(3 3 4 5) '(3 3))
-)
+(defun test-selection-sort-imperative ()
+  (check-selection-sort-imperative "test 1" '(5 3 8 1 4) '(1 3 4 5 8))
+  (check-selection-sort-imperative "test 2" '(9 7 5 3 1) '(1 3 5 7 9))
+  (check-selection-sort-imperative "test 3" '(1 2 3 4 5) '(1 2 3 4 5))
+  (check-selection-sort-imperative "test 4" '(10) '(10))
+  (check-selection-sort-imperative "test 5" '(nil) '(nil)))
 ```
 ### Тестування
 ```lisp
-passed... Test 1
-passed... Test 2
-passed... Test 3
-passed... Test 4
-passed... Test 5
-passed... Test 6
-passed... Test 7
-passed... Test 8
+PASSED... test 1
+PASSED... test 2
+PASSED... test 3
+PASSED... test 4
+PASSED... test 5
+PASSED... test 6
 ```
 
 
