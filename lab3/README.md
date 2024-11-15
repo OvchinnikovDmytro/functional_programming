@@ -48,20 +48,19 @@
   (if (null lst) 
     current-min
     (find-min (cdr lst) 
-      (if (< (car lst) current-min) 
-        (car lst)
-        current-min))))
+      (if (< (car lst) current-min) (car lst) current-min))))
 
-(defun remove-element (lst element)
+(defun remove-element (lst min)
   (cond ((null lst) nil)
-    ((equal (car lst) element) (cdr lst))
-    (t (cons (car lst) (remove-element (cdr lst) element)))))
+    ((= (car lst) min) (cdr lst))
+    (t (cons (car lst) (remove-element (cdr lst) min)))))
 
 (defun selection-sort-functional (lst)
-  (if (null lst)
-    nil
+  (when lst
     (let ((min (find-min (cdr lst) (car lst))))
-      (cons min (selection-sort-functional (remove-element lst min))))))
+      (if (null min)
+        lst
+        (cons min (selection-sort-functional (remove-element lst min)))))))
 ```
 ### Тестові набори
 ```lisp
