@@ -66,7 +66,7 @@
 ### Тестові набори
 ```lisp
 (defun check-selection-sort-functional (name input expected &key (key #'identity) (test #'<))
-  "Перевіряє функцію selection-sort-functional з вхідними даними input і очікуваним результатом EXPECTED."
+  "Перевіряє функцію selection-sort-functional з вхідними даними input і очікуваним результатом expected."
   (format t "~:[FAILED~;PASSED~]... ~a~%" (equal (selection-sort-functional input :key key :test test) expected) name))
 
 (defun test-selection-sort-functional ()
@@ -119,7 +119,7 @@ CL-USER> (mapcar (propagator-fn :comparator #'<) '(1 2 3))
 ### Тестові набори
 ```lisp
 (defun check-propagator-fn (name input comparator expected)
-  "Перевіряє функцію propagator-fn з вхідними даними input, comparator і очікуваним результатом EXPECTED."
+  "Перевіряє функцію propagator-fn з вхідними даними input, comparator і очікуваним результатом expected."
   (let* ((comparator-fn (or comparator #'>))
          (result (mapcar (propagator-fn :comparator comparator-fn) input)))
     (format t "~:[FAILED~;PASSED~]... ~a~%" 
