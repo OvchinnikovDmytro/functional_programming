@@ -1,0 +1,7 @@
+id,name,desgnation,project,description
+1,MedAI,Healthcare AI,BioAnalysis,An AI model designed for analyzing biological data.
+2,AgroBrain,Agriculture AI,SmartCrop,A model for predicting crop yield and monitoring plant health.
+3,UrbanOptimizer,City Planning AI,SmartCityManager,Optimizes urban traffic and infrastructure management.
+4,StudyBuddy,Educational AI,LearningEnhancer,A personalized educational assistant powered by NLP.
+5,GenoMapper,Genomic AI,DNAExplorer,Automates the analysis of genomic data.
+6,EcoPlanner,Environmental AI,GreenFuture,Helps in planning eco-friendly infrastructure.
