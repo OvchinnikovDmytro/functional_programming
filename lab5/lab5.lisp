@@ -90,13 +90,20 @@
           widths
           :initial-value "+"))
 
+(defun print-hashtable (hashtable)
+  (maphash (lambda (key value)
+             (format t "~a: ~a~%" key value))
+           hashtable))
+
 (defun test-models ()
   (let ((selector (select "AiModels.csv")))
-    (format t "Усі моделі: ~a~%"
-            (mapcar #'hashtable-to-alist (funcall selector)))
+    (format t "Усі моделі: ~%")
+    (dolist (row (funcall selector))
+      (print-hashtable row))
 
-    (format t "Модель з ID '2': ~a~%"
-            (mapcar #'hashtable-to-alist (funcall selector :filters '(("id" . "2")))))
+    (format t "Модель з ID '2': ~%")
+    (dolist (row (funcall selector :filters '(("id" . "2"))))
+      (print-hashtable row))
 
     (format t "Моделі для проекту 'SmartCityManager': ~a~%"
             (mapcar #'hashtable-to-alist (funcall selector :filters '(("project" . "SmartCityManager")))))
@@ -109,12 +116,17 @@
 
 (defun test-projects ()
   (let ((selector (select "projects.csv")))
-    (format t "Усі проекти: ~a~%"
-      (mapcar #'hashtable-to-alist (funcall selector)))
-
-    (format t "Проект за ключем '2': ~a~%"
-      (mapcar #'hashtable-to-alist (funcall selector :filters '(("id" . "2")))))
+    (format t "Усі проекти: ~%")
+    (dolist (row (funcall selector))
+      (print-hashtable row))
     
+    (format t "Проект компанії BioTech Corp : ~%")
+    (dolist (row (funcall selector :filters '(("researcher" . "BioTech Corp"))))
+      (print-hashtable row))
+
+    (format t "Модель з ID '3': ~a~%"
+            (mapcar #'hashtable-to-alist (funcall selector :filters '(("id" . "3")))))
+
     (let ((filtered-projects (funcall selector :filters '(("launch year" . "2023")))))
       (write-csv "projectsOut.csv" filtered-projects :separator #\,)))
       
