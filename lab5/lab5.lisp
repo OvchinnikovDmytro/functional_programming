@@ -9,46 +9,45 @@
           finally (push (string-trim '(#\Space #\Tab #\Newline) (subseq string start)) result))
     (nreverse result)))
 
-(defun read-csv-as-list (file-path &key (separator #\,))
+(defun hashtable-to-alist (hashtable)
+  (let ((alist '()))
+    (maphash (lambda (key value)
+               (push (cons key value) alist))
+             hashtable)
+    (reverse alist)))
+
+(defun read-csv (file-path &key (separator #\,))
   (let ((rows '()))
     (with-open-file (stream file-path :direction :input)
-      (read-line stream)
-      (loop for line = (read-line stream nil nil)
-            while line
-            do (push (split-string line separator) rows)))
+      (let ((headers (split-string (read-line stream) separator)))
+        (loop for line = (read-line stream nil nil)
+              while line
+              do (let ((values (split-string line separator)))
+                   (let ((row (make-hash-table :test 'equal)))
+                     (loop for header in headers
+                           for value in values
+                           do (setf (gethash header row) (string-trim '(#\Space #\Tab #\Newline) value)))
+                     (push row rows))))))
     (reverse rows)))
 
-(defun select (file-path &key (structure '()) (separator #\,))
-  (let ((rows (read-csv-as-list file-path :separator separator)))
+(defun select (file-path &key (separator #\,))
+  (let ((rows (read-csv file-path :separator separator)))
     (lambda (&key (filters '()))
       (let ((filtered-rows rows))
         (dolist (filter filters filtered-rows)
-          (let ((column (car filter))
+          (let ((key (car filter))
                 (expected-value (cdr filter)))
             (setf filtered-rows
                   (remove-if-not (lambda (row)
-                                   (string= (nth column row) expected-value))
-                                 filtered-rows))))))))
+                                   (string= (gethash key row) expected-value))
+                                 filtered-rows))))
+        filtered-rows))))
 
-(defun write-hashtable-to-projects-csv (filepath hashtable keys)
-  (let ((last-number 0)
-        (file-non-empty-p (probe-file filepath)))
-    (when file-non-empty-p
-      (with-open-file (stream filepath :direction :input)
-        (loop for line = (read-line stream nil nil)
-              while line
-              do (let ((parts (split-string line #\,)))
-                   (when (and (not (null parts)) (integerp (parse-integer (first parts) :junk-allowed t)))
-                     (setf last-number (max last-number (parse-integer (first parts)))))))))
-    (with-open-file (stream filepath :direction :output :if-exists :append :if-does-not-exist :create)
-      (let ((values (mapcar (lambda (key)
-                              (let ((value (gethash key hashtable)))
-                                (cond
-                                 ((null value) "")
-                                 ((stringp value) value)
-                                 (t (princ-to-string value)))))
-                            keys)))
-        (format stream "~a,~{~a~^,~}~%" (1+ last-number) values)))))
+(defun write-csv (file-path rows &key (separator #\,))
+  (with-open-file (stream file-path :direction :output :if-exists :supersede :if-does-not-exist :create)
+    (dolist (row rows)
+      (let ((values (mapcar #'cdr (hashtable-to-alist row))))
+        (format stream "~{~a~^~a~}~%" values separator)))))
 
 (defun hashtable-to-alist (hashtable)
   (let ((alist '()))
@@ -57,20 +56,14 @@
              hashtable)
     (reverse alist)))
 
-(defun print-alist (alist)
-  (format t "((~%")
-  (dolist (pair alist)
-    (format t " (~a . \"~a\")~%" (car pair) (cdr pair)))
-  (format t "))~%"))
-
-(defun pretty-print-csv-table (filepath)
+(defun pretty-print-csv-table (filepath &key (separator #\,))
   (when (probe-file filepath)
     (with-open-file (stream filepath :direction :input)
       (let* ((lines (loop for line = (read-line stream nil nil)
                           while line
                           collect line))
-             (headers (split-string (first lines) #\,))
-             (rows (mapcar (lambda (line) (split-string line #\,)) (rest lines)))
+             (headers (split-string (first lines) separator))
+             (rows (mapcar (lambda (line) (split-string line separator)) (rest lines)))
              (column-widths (mapcar (lambda (col-index)
                                        (max (length (nth col-index headers))
                                             (loop for row in rows maximize (length (nth col-index row)))))
@@ -99,54 +92,33 @@
 
 (defun test-models ()
   (let ((selector (select "AiModels.csv")))
-    (format t "Усі моделі: ~a~%" (funcall selector))
+    (format t "Усі моделі: ~a~%"
+            (mapcar #'hashtable-to-alist (funcall selector)))
 
     (format t "Модель з ID '2': ~a~%"
-            (funcall selector :filters '((0 . "2"))))
+            (mapcar #'hashtable-to-alist (funcall selector :filters '(("id" . "2")))))
 
     (format t "Моделі для проекту 'SmartCityManager': ~a~%"
-            (funcall selector :filters '((3 . "SmartCityManager"))))
+            (mapcar #'hashtable-to-alist (funcall selector :filters '(("project" . "SmartCityManager")))))
 
-    (format t "Модель для фермерства: ~a~%"
-            (funcall selector :filters '((2 . "Agriculture AI"))))
+    (let ((filtered-models (funcall selector :filters '(("name" . "StudyBuddy")))))
+    (write-csv "modelsOut.csv" filtered-models :separator #\,)))
 
-    (let ((my-hashtable (make-hash-table)))
-      (setf (gethash 'name my-hashtable) "EcoPlanner")
-      (setf (gethash 'designation my-hashtable) "Environmental AI")
-      (setf (gethash 'project my-hashtable) "GreenFuture")
-      (setf (gethash 'description my-hashtable) "Helps in planning eco-friendly infrastructure.")
+  (pretty-print-csv-table "AiModels.csv"))
 
-      (write-hashtable-to-projects-csv "AiModels.csv" my-hashtable '(name designation project description))
-      (let ((alist (hashtable-to-alist my-hashtable)))
-        (print-alist alist)))
-
-    (pretty-print-csv-table "AiModels.csv")))
 
 (defun test-projects ()
   (let ((selector (select "projects.csv")))
-    (format t "Усі проекти: ~a~%" (funcall selector))
+    (format t "Усі проекти: ~a~%"
+      (mapcar #'hashtable-to-alist (funcall selector)))
 
     (format t "Проект за ключем '2': ~a~%"
-            (funcall selector :filters '((0 . "2"))))
-
-    (format t "Проект з роком запуску '2023': ~a~%"
-            (funcall selector :filters '((3 . "2023"))))
+      (mapcar #'hashtable-to-alist (funcall selector :filters '(("id" . "2")))))
     
-    (format t "Проект від 'BioTech Corp': ~a~%"
-            (funcall selector :filters '((2 . "BioTech Corp"))))
-
-(let ((my-hashtable (make-hash-table)))
-  (setf (gethash 'name my-hashtable) "Amogus")
-  (setf (gethash 'researcher my-hashtable) "Definately Human")
-  (setf (gethash 'year my-hashtable) 2024)
-  (setf (gethash 'description my-hashtable) "The're here among us")
-
-  (write-hashtable-to-projects-csv "projects.csv" my-hashtable '(name researcher year description))
-  (let ((alist (hashtable-to-alist my-hashtable)))
-    (print-alist alist)))
-
-  (pretty-print-csv-table "projects.csv")))
+    (let ((filtered-projects (funcall selector :filters '(("launch year" . "2023")))))
+      (write-csv "projectsOut.csv" filtered-projects :separator #\,)))
+      
+    (pretty-print-csv-table "projects.csv"))
 
 (test-models)
-
 (test-projects)
